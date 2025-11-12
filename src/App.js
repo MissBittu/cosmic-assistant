@@ -1,109 +1,127 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Clock, Target, Lock, Folder, Plus, X, Check, Star, Sparkles, Moon, Sun, Bell, Edit2, Trash2, ChevronDown, ChevronRight, Zap, TrendingUp, AlertCircle, Brain, Mic, Image, FileText, Activity, BarChart3, RefreshCw, MessageSquare, Send, BellRing, Menu, Settings, Search, Filter, Link2, Archive, Eye, EyeOff, Save, Copy, Download, Upload } from 'lucide-react';
+import MagicalCosmicBackground from './components/MagicalCosmicBackground';
+import { 
+  Calendar, Clock, Target, Lock, Folder, Plus, X, Check, Star, Sparkles, 
+  Moon, Sun, Bell, Edit2, Trash2, Zap, TrendingUp, Brain, Mic, FileText, 
+  Activity, BarChart3, RefreshCw, MessageSquare, Send, Settings, 
+  Upload, Download, Search, Filter, Grid, List, ChevronDown, ChevronRight,
+  Sunrise, Sunset, AlertCircle, CheckCircle, XCircle
+} from 'lucide-react';
 
-const CosmicAssistant = () => {
-  // Core state
+const NotionTablet = () => {
+  // ==================== STATE MANAGEMENT ====================
   const [activeView, setActiveView] = useState('dashboard');
+  const [theme, setTheme] = useState('night'); // night, sunrise, day, sunset
+  const [autoTheme, setAutoTheme] = useState(true);
+  const [themeMode, setThemeMode] = useState('Aurora'); // Aurora, Nebula, Stardust, Solar Flare
+  
+  // Data States
   const [dailyGoals, setDailyGoals] = useState([]);
   const [longTermGoals, setLongTermGoals] = useState([]);
   const [secretNotes, setSecretNotes] = useState([]);
   const [folders, setFolders] = useState([]);
+  const [smartBoardData, setSmartBoardData] = useState([]);
   const [tasks, setTasks] = useState([]);
+  
+  // UI States
   const [currentTime, setCurrentTime] = useState(new Date());
-  
-  // UI state
   const [showModal, setShowModal] = useState(null);
-  const [editingItem, setEditingItem] = useState(null);
-  const [theme, setTheme] = useState('dark');
   const [showChat, setShowChat] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFolder, setSelectedFolder] = useState(null);
-  const [vaultPassword, setVaultPassword] = useState('');
-  const [isVaultUnlocked, setIsVaultUnlocked] = useState(false);
-  
-  // AI & Advanced features
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  const [aiInsights, setAiInsights] = useState({ alignment: 85, productivity: 'high', recommendation: '' });
-  const [isRecording, setIsRecording] = useState(false);
-  const [energyLevel, setEnergyLevel] = useState('peak');
-  
-  // Notifications
   const [notifications, setNotifications] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const [energyLevel, setEnergyLevel] = useState('peak');
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('grid'); // grid or list
   
-  // Refs
   const fileInputRef = useRef(null);
   const chatEndRef = useRef(null);
-  
-  // Load data from localStorage on mount
+
+  // ==================== AUTO THEME MANAGEMENT ====================
   useEffect(() => {
-    const loadData = () => {
-      try {
-        const saved = localStorage.getItem('cosmicAssistantData');
-        if (saved) {
-          const data = JSON.parse(saved);
-          setDailyGoals(data.dailyGoals || []);
-          setLongTermGoals(data.longTermGoals || []);
-          setSecretNotes(data.secretNotes || []);
-          setFolders(data.folders || []);
-          setTasks(data.tasks || []);
-          setTheme(data.theme || 'dark');
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-      }
-    };
-    loadData();
-  }, []);
-  
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    const saveData = () => {
-      try {
-        const data = {
-          dailyGoals,
-          longTermGoals,
-          secretNotes,
-          folders,
-          tasks,
-          theme,
-          lastSaved: new Date().toISOString()
-        };
-        localStorage.setItem('cosmicAssistantData', JSON.stringify(data));
-      } catch (error) {
-        console.error('Error saving data:', error);
-      }
-    };
-    saveData();
-  }, [dailyGoals, longTermGoals, secretNotes, folders, tasks, theme]);
-  
-  // Time and energy tracking
+    if (autoTheme) {
+      const updateTheme = () => {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 7) setTheme('sunrise');
+        else if (hour >= 7 && hour < 17) setTheme('day');
+        else if (hour >= 17 && hour < 19) setTheme('sunset');
+        else setTheme('night');
+      };
+      updateTheme();
+      const interval = setInterval(updateTheme, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [autoTheme]);
+
+  // ==================== ENERGY LEVEL TRACKING ====================
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-      updateEnergyLevel();
+      const hour = new Date().getHours();
+      if (hour >= 9 && hour < 12) setEnergyLevel('peak');
+      else if (hour >= 14 && hour < 17) setEnergyLevel('high');
+      else if (hour >= 6 && hour < 9) setEnergyLevel('rising');
+      else if (hour >= 12 && hour < 14) setEnergyLevel('dip');
+      else setEnergyLevel('low');
+      
       checkReminders();
-    }, 60000); // Check every minute
+    }, 1000);
     return () => clearInterval(timer);
   }, [dailyGoals, tasks]);
-  
-  // Auto-scroll chat
+
+  // ==================== DATA PERSISTENCE ====================
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
-  
-  const updateEnergyLevel = () => {
-    const hour = new Date().getHours();
-    if (hour >= 9 && hour < 12) setEnergyLevel('peak');
-    else if (hour >= 14 && hour < 17) setEnergyLevel('high');
-    else if (hour >= 6 && hour < 9) setEnergyLevel('rising');
-    else if (hour >= 12 && hour < 14) setEnergyLevel('dip');
-    else setEnergyLevel('low');
+    const savedData = localStorage.getItem('notionTabletData');
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData);
+        setDailyGoals(data.dailyGoals || []);
+        setLongTermGoals(data.longTermGoals || []);
+        setSecretNotes(data.secretNotes || []);
+        setFolders(data.folders || []);
+        setSmartBoardData(data.smartBoardData || []);
+        setTasks(data.tasks || []);
+      } catch (e) {
+        console.error('Failed to load data:', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const dataToSave = {
+      dailyGoals,
+      longTermGoals,
+      secretNotes,
+      folders,
+      smartBoardData,
+      tasks
+    };
+    localStorage.setItem('notionTabletData', JSON.stringify(dataToSave));
+  }, [dailyGoals, longTermGoals, secretNotes, folders, smartBoardData, tasks]);
+
+  // ==================== NOTIFICATIONS ====================
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      setNotificationsEnabled(permission === 'granted');
+      if (permission === 'granted') {
+        showNotification('Notifications Enabled', 'You\'ll receive smart reminders');
+      }
+    }
   };
-  
+
+  const showNotification = (title, body) => {
+    if (notificationsEnabled && 'Notification' in window) {
+      new Notification(title, { body, icon: '⭐' });
+    }
+    setNotifications(prev => [...prev, { id: Date.now(), title, body, time: new Date() }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== prev[0]?.id));
+    }, 5000);
+  };
+
   const checkReminders = () => {
     const now = new Date();
     const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -114,7 +132,7 @@ const CosmicAssistant = () => {
         setDailyGoals(prev => prev.map(g => g.id === goal.id ? { ...g, reminded: true } : g));
       }
     });
-    
+
     tasks.forEach(task => {
       if (task.time === currentTimeStr && !task.completed && !task.reminded) {
         showNotification('📋 Task Reminder', task.title);
@@ -122,193 +140,34 @@ const CosmicAssistant = () => {
       }
     });
   };
-  
-  const requestNotificationPermission = async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      setNotificationsEnabled(permission === 'granted');
-      if (permission === 'granted') {
-        showNotification('Notifications Enabled', 'You\'ll receive reminders for your goals and tasks');
-      }
-    }
-  };
-  
-  const showNotification = (title, body) => {
-    if (notificationsEnabled && 'Notification' in window && document.hidden) {
-      new Notification(title, { body, icon: '⭐' });
-    }
-    setNotifications(prev => [...prev, { id: Date.now(), title, body, time: new Date() }]);
-  };
-  
-  const calculateGoalAlignment = () => {
-    if (longTermGoals.length === 0) return 100;
-    const todayTasks = dailyGoals.filter(g => !g.completed);
-    const alignedTasks = todayTasks.filter(task => 
-      longTermGoals.some(goal => 
-        task.linkedGoalId === goal.id || 
-        task.title.toLowerCase().includes(goal.title.toLowerCase().split(' ')[0])
-      )
-    );
-    return Math.round((alignedTasks.length / Math.max(todayTasks.length, 1)) * 100);
-  };
-  
-  // CRUD Operations
-  const addDailyGoal = (goal) => {
-    const newGoal = { 
-      id: Date.now(), 
-      ...goal, 
-      completed: false, 
-      reminder: goal.reminder !== false,
-      createdAt: new Date().toISOString()
-    };
-    setDailyGoals([...dailyGoals, newGoal]);
-    showNotification('Goal Added', goal.title);
-    setShowModal(null);
-  };
-  
-  const addLongTermGoal = (goal) => {
-    setLongTermGoals([...longTermGoals, { 
-      id: Date.now(), 
-      ...goal, 
-      progress: 0, 
-      milestones: goal.milestones || [],
-      createdAt: new Date().toISOString()
-    }]);
-    showNotification('Long-term Goal Created', goal.title);
-    setShowModal(null);
-  };
-  
-  const addTask = (task) => {
-    setTasks([...tasks, { 
-      id: Date.now(), 
-      ...task, 
-      completed: false,
-      estimatedDuration: task.estimatedDuration || 30,
-      priority: task.priority || 'medium'
-    }]);
-    showNotification('Task Added', task.title);
-    setShowModal(null);
-  };
-  
-  const addFolder = (folder) => {
-    setFolders([...folders, { 
-      id: Date.now(), 
-      ...folder, 
-      items: [],
-      createdAt: new Date().toISOString()
-    }]);
-    showNotification('Folder Created', folder.name);
-    setShowModal(null);
-  };
-  
-  const addSecretNote = (note) => {
-    setSecretNotes([...secretNotes, {
-      id: Date.now(),
-      ...note,
-      createdAt: new Date().toISOString(),
-      lastModified: new Date().toISOString()
-    }]);
-    showNotification('Secret Note Saved', 'Note securely stored');
-    setShowModal(null);
-  };
-  
-  const addItemToFolder = (folderId, item) => {
-    setFolders(folders.map(f => 
-      f.id === folderId 
-        ? { ...f, items: [...f.items, { id: Date.now(), ...item }] }
-        : f
-    ));
-    showNotification('Item Added', 'Added to folder');
-    setShowModal(null);
-  };
-  
-  const deleteItem = (id, type) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) return;
-    
-    switch(type) {
-      case 'daily':
-        setDailyGoals(dailyGoals.filter(g => g.id !== id));
-        break;
-      case 'longterm':
-        setLongTermGoals(longTermGoals.filter(g => g.id !== id));
-        break;
-      case 'task':
-        setTasks(tasks.filter(t => t.id !== id));
-        break;
-      case 'folder':
-        setFolders(folders.filter(f => f.id !== id));
-        break;
-      case 'secret':
-        setSecretNotes(secretNotes.filter(n => n.id !== id));
-        break;
-      default:
-        break;
-    }
-    showNotification('Deleted', 'Item removed successfully');
-  };
-  
-  const toggleTaskComplete = (id, type) => {
-    if (type === 'daily') {
-      setDailyGoals(dailyGoals.map(g => {
-        if (g.id === id) {
-          const newCompleted = !g.completed;
-          if (newCompleted) {
-            showNotification('Goal Completed! 🎉', g.title);
-            if (g.linkedGoalId) {
-              updateLongTermProgress(g.linkedGoalId);
-            }
-          }
-          return { ...g, completed: newCompleted };
-        }
-        return g;
-      }));
-    } else if (type === 'task') {
-      setTasks(tasks.map(t => {
-        if (t.id === id && !t.completed) {
-          showNotification('Task Done! ✅', t.title);
-        }
-        return t.id === id ? { ...t, completed: !t.completed } : t;
-      }));
-    }
-  };
-  
-  const updateLongTermProgress = (goalId) => {
-    const linkedTasks = dailyGoals.filter(g => g.linkedGoalId === goalId);
-    const completedLinked = linkedTasks.filter(g => g.completed).length;
-    const progress = linkedTasks.length > 0 ? Math.round((completedLinked / linkedTasks.length) * 100) : 0;
-    
-    setLongTermGoals(longTermGoals.map(lg => 
-      lg.id === goalId ? { ...lg, progress } : lg
-    ));
-  };
-  
-  // AI Chat Functions
+
+  // ==================== AI ASSISTANT ====================
   const handleChatSubmit = (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
-    
+
     const userMessage = { id: Date.now(), sender: 'user', text: chatInput, time: new Date() };
     setChatMessages(prev => [...prev, userMessage]);
-    
+
     setTimeout(() => {
       const response = processAICommand(chatInput);
       const aiMessage = { id: Date.now() + 1, sender: 'ai', text: response, time: new Date() };
       setChatMessages(prev => [...prev, aiMessage]);
     }, 500);
-    
+
     setChatInput('');
   };
-  
+
   const processAICommand = (input) => {
     const lower = input.toLowerCase();
     
     if (lower.includes('add goal') || lower.includes('create goal')) {
       const goalText = input.replace(/add goal|create goal/i, '').trim();
       if (goalText) {
-        addDailyGoal({ title: goalText, time: '' });
-        return `✅ Added daily goal: "${goalText}"`;
+        addDailyGoal({ title: goalText, time: '', priority: 'medium' });
+        return `✅ Created daily goal: "${goalText}"`;
       }
-      return "What goal would you like to add?";
+      return "What goal would you like to create?";
     }
     
     if (lower.includes('add task') || lower.includes('schedule')) {
@@ -317,771 +176,1274 @@ const CosmicAssistant = () => {
         const now = new Date();
         now.setHours(now.getHours() + 1);
         addTask({ title: taskText, time: now.toTimeString().slice(0, 5), priority: 'medium' });
-        return `✅ Scheduled task: "${taskText}" for ${now.toTimeString().slice(0, 5)}`;
+        return `✅ Scheduled: "${taskText}" for ${now.toTimeString().slice(0, 5)}`;
       }
-      return "What task should I schedule?";
+      return "What should I schedule?";
     }
     
-    if (lower.includes('alignment') || lower.includes('progress')) {
-      const alignment = calculateGoalAlignment();
-      return `📊 Your goal alignment is ${alignment}%. ${alignment > 80 ? 'Great job!' : 'Consider linking more tasks to your long-term goals.'}`;
-    }
-    
-    if (lower.includes('energy') || lower.includes('when should i')) {
-      return `⚡ Your energy level is ${energyLevel}. ${
-        energyLevel === 'peak' ? 'Perfect time for your most important tasks!' :
-        energyLevel === 'high' ? 'Good time for focused work.' :
-        energyLevel === 'dip' ? 'Consider taking a break or doing lighter tasks.' :
-        'Energy is low. Time to rest or do simple tasks.'
-      }`;
-    }
-    
-    if (lower.includes('stats') || lower.includes('summary')) {
+    if (lower.includes('show progress') || lower.includes('stats')) {
       const completed = dailyGoals.filter(g => g.completed).length;
       const total = dailyGoals.length;
-      return `📈 Today: ${completed}/${total} goals completed. ${longTermGoals.length} long-term goals tracked. ${tasks.length} tasks scheduled.`;
+      const alignment = calculateGoalAlignment();
+      return `📊 Progress:\n• Daily: ${completed}/${total} completed\n• Alignment: ${alignment}%\n• Long-term goals: ${longTermGoals.length}\n• Energy: ${energyLevel}`;
     }
     
-    return `I can help you with:
-• "Add goal [title]" - Create a new goal
-• "Add task [title]" - Schedule a new task
-• "Show alignment" - Check goal alignment
-• "Energy advice" - Get productivity tips
-• "Show stats" - See your progress`;
+    if (lower.includes('reschedule') || lower.includes('optimize')) {
+      autoScheduleTasks();
+      return `🔄 Optimized your schedule based on energy levels and priorities!`;
+    }
+    
+    if (lower.includes('energy') || lower.includes('when should')) {
+      return `⚡ Current energy: ${energyLevel}.\n${
+        energyLevel === 'peak' ? '🎯 Perfect for complex tasks!' :
+        energyLevel === 'high' ? '💪 Good for focused work.' :
+        energyLevel === 'dip' ? '☕ Consider a break.' :
+        '🌙 Time for light tasks or rest.'
+      }`;
+    }
+
+    if (lower.includes('show alignment')) {
+      const alignment = calculateGoalAlignment();
+      return `🎯 Goal Alignment: ${alignment}%\n${alignment > 80 ? '🌟 Excellent! Stay focused!' : '⚠️ Consider linking tasks to long-term goals.'}`;
+    }
+    
+    return `I can help with:\n• "Add goal [name]"\n• "Schedule [task]"\n• "Show progress"\n• "Reschedule tasks"\n• "Show alignment"\n• "Energy advice"`;
   };
-  
-  // Voice capture simulation
-  const startVoiceCapture = () => {
-    setIsRecording(true);
-    setTimeout(() => {
-      setIsRecording(false);
-      const voiceTask = {
-        title: "Meeting about project strategy",
-        time: new Date().toTimeString().slice(0, 5),
-        priority: 'high'
-      };
-      addTask(voiceTask);
-    }, 2000);
+
+  // ==================== GOAL MANAGEMENT ====================
+  const calculateGoalAlignment = () => {
+    if (longTermGoals.length === 0) return 100;
+    const todayTasks = dailyGoals.filter(g => !g.completed);
+    const alignedTasks = todayTasks.filter(task => {
+      return longTermGoals.some(goal => 
+        task.linkedGoalId === goal.id || 
+        task.title.toLowerCase().includes(goal.title.toLowerCase().split(' ')[0])
+      );
+    });
+    return Math.round((alignedTasks.length / Math.max(todayTasks.length, 1)) * 100);
   };
-  
-  // File upload handler
+
+  const addDailyGoal = (goal) => {
+    const newGoal = { 
+      id: Date.now(), 
+      ...goal, 
+      completed: false, 
+      reminder: true,
+      createdAt: new Date().toISOString()
+    };
+    setDailyGoals([...dailyGoals, newGoal]);
+    showNotification('Goal Added', goal.title);
+  };
+
+  const addLongTermGoal = (goal) => {
+    const newGoal = {
+      id: Date.now(),
+      ...goal,
+      progress: 0,
+      milestones: [],
+      createdAt: new Date().toISOString()
+    };
+    setLongTermGoals([...longTermGoals, newGoal]);
+    showNotification('Long-term Goal Created', goal.title);
+  };
+
+  const addTask = (task) => {
+    const newTask = {
+      id: Date.now(),
+      ...task,
+      completed: false,
+      estimatedDuration: task.estimatedDuration || 30,
+      priority: task.priority || 'medium',
+      status: 'pending'
+    };
+    setTasks([...tasks, newTask]);
+  };
+
+  const toggleTaskComplete = (id, type = 'daily') => {
+    if (type === 'daily') {
+      setDailyGoals(dailyGoals.map(g => {
+        if (g.id === id) {
+          const newCompleted = !g.completed;
+          if (newCompleted) {
+            showNotification('🎉 Goal Completed!', g.title);
+            updateLinkedGoalProgress(g.linkedGoalId);
+          }
+          return { ...g, completed: newCompleted };
+        }
+        return g;
+      }));
+    } else {
+      setTasks(tasks.map(t => {
+        if (t.id === id && !t.completed) {
+          showNotification('✅ Task Done!', t.title);
+        }
+        return t.id === id ? { ...t, completed: !t.completed } : t;
+      }));
+    }
+  };
+
+  const updateLinkedGoalProgress = (goalId) => {
+    if (!goalId) return;
+    const linkedTasks = dailyGoals.filter(g => g.linkedGoalId === goalId);
+    const completedTasks = linkedTasks.filter(g => g.completed).length;
+    const newProgress = Math.round((completedTasks / linkedTasks.length) * 100);
+    
+    setLongTermGoals(longTermGoals.map(lg => 
+      lg.id === goalId ? { ...lg, progress: Math.min(newProgress, 100) } : lg
+    ));
+  };
+
+  const linkTaskToGoal = (taskId, goalId) => {
+    setDailyGoals(dailyGoals.map(t => 
+      t.id === taskId ? { ...t, linkedGoalId: goalId } : t
+    ));
+  };
+
+  // ==================== INTELLIGENT SCHEDULING ====================
+  const autoScheduleTasks = () => {
+    const unscheduledTasks = tasks.filter(t => !t.completed);
+    const sortedTasks = [...unscheduledTasks].sort((a, b) => {
+      const priorityWeight = { high: 3, medium: 2, low: 1 };
+      return priorityWeight[b.priority] - priorityWeight[a.priority];
+    });
+
+    let currentHour = new Date().getHours();
+    const updatedTasks = sortedTasks.map(task => {
+      if (currentHour >= 9 && currentHour < 12 && task.priority === 'high') {
+        // Schedule high-priority during peak energy
+        const time = `${currentHour}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`;
+        currentHour++;
+        return { ...task, time, rescheduled: true };
+      } else if (currentHour >= 14 && currentHour < 17) {
+        const time = `${currentHour}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`;
+        currentHour++;
+        return { ...task, time, rescheduled: true };
+      }
+      return task;
+    });
+
+    setTasks(tasks.map(t => {
+      const updated = updatedTasks.find(ut => ut.id === t.id);
+      return updated || t;
+    }));
+  };
+
+  // ==================== SECRET NOTES ====================
+  const addSecretNote = (note) => {
+    setSecretNotes([...secretNotes, {
+      id: Date.now(),
+      content: note,
+      createdAt: new Date().toISOString(),
+      encrypted: true
+    }]);
+  };
+
+  const deleteSecretNote = (id) => {
+    setSecretNotes(secretNotes.filter(n => n.id !== id));
+  };
+
+  // ==================== FOLDERS ====================
+  const addFolder = (folder) => {
+    setFolders([...folders, {
+      id: Date.now(),
+      ...folder,
+      items: [],
+      createdAt: new Date().toISOString()
+    }]);
+  };
+
+  const addItemToFolder = (folderId, item) => {
+    setFolders(folders.map(f => 
+      f.id === folderId ? { ...f, items: [...f.items, { id: Date.now(), ...item }] } : f
+    ));
+  };
+
+  // ==================== SMARTBOARD (EXCEL-LIKE) ====================
+  const addSmartBoardRow = () => {
+    setSmartBoardData([...smartBoardData, {
+      id: Date.now(),
+      status: 'pending',
+      title: '',
+      deadline: '',
+      priority: 'medium',
+      progress: 0,
+      notes: ''
+    }]);
+  };
+
+  const updateSmartBoardCell = (id, field, value) => {
+    setSmartBoardData(smartBoardData.map(row =>
+      row.id === id ? { ...row, [field]: value } : row
+    ));
+  };
+
+  const deleteSmartBoardRow = (id) => {
+    setSmartBoardData(smartBoardData.filter(row => row.id !== id));
+  };
+
+  // ==================== FILE UPLOAD ====================
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    setTimeout(() => {
-      const extractedTask = {
-        title: `Review ${file.name}`,
-        time: new Date().toTimeString().slice(0, 5),
-        priority: 'medium'
-      };
-      addTask(extractedTask);
-    }, 1000);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      addSecretNote(`📎 File: ${file.name}\nSize: ${(file.size / 1024).toFixed(2)}KB\nUploaded: ${new Date().toLocaleString()}`);
+      showNotification('File Uploaded', file.name);
+    };
+    reader.readAsDataURL(file);
   };
-  
-  // Theme colors
-  const themeColors = theme === 'dark' ? {
-    bg: 'from-indigo-950 via-purple-950 to-pink-950',
-    cardBg: 'bg-black/30',
-    text: 'text-white',
-    textSecondary: 'text-gray-400',
-    border: 'border-purple-500/30',
-    starColor: 'bg-white',
-    inputBg: 'bg-black/20',
-    hoverBg: 'hover:bg-white/10'
-  } : {
-    bg: 'from-blue-100 via-purple-100 to-pink-100',
-    cardBg: 'bg-white/80',
-    text: 'text-gray-900',
-    textSecondary: 'text-gray-600',
-    border: 'border-purple-300/50',
-    starColor: 'bg-purple-900',
-    inputBg: 'bg-white/50',
-    hoverBg: 'hover:bg-gray-200/50'
+
+  // ==================== EXPORT DATA ====================
+  const exportData = () => {
+    const data = {
+      dailyGoals,
+      longTermGoals,
+      secretNotes,
+      folders,
+      smartBoardData,
+      tasks,
+      exportDate: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `notion-tablet-backup-${Date.now()}.json`;
+    a.click();
+    showNotification('Data Exported', 'Backup created successfully');
   };
+
+  // ==================== RENDER COMPONENTS ====================
   
-  // Modal Component
-  const Modal = ({ onClose, children, title }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose}></div>
-      <div className={`${themeColors.cardBg} backdrop-blur-xl rounded-2xl p-6 border ${themeColors.border} shadow-2xl max-w-md w-full relative z-10 max-h-[90vh] overflow-y-auto custom-scrollbar`}>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className={`text-2xl font-bold ${themeColors.text}`}>{title}</h3>
-          <button onClick={onClose} className={`${themeColors.textSecondary} hover:text-purple-400 transition-colors`}>
-            <X className="w-6 h-6" />
-          </button>
+  const DashboardView = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-5xl font-bold text-white mb-2">
+          Good {theme === 'sunrise' ? 'Morning' : theme === 'day' ? 'Afternoon' : theme === 'sunset' ? 'Evening' : 'Night'}! ✨
+        </h1>
+        <p className="text-purple-200 text-lg">{currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        <p className="text-purple-300 text-2xl font-semibold mt-2">{currentTime.toLocaleTimeString()}</p>
+      </div>
+
+      {/* AI Insights Panel */}
+      <div className="backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/20 shadow-2xl">
+        <div className="flex items-center gap-3 mb-6">
+          <Brain className="w-8 h-8 text-purple-400" />
+          <h3 className="text-2xl font-bold text-white">AI Insights</h3>
         </div>
-        {children}
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-black/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-gray-300 text-sm">Goal Alignment</span>
+              <TrendingUp className="w-5 h-5 text-green-400" />
+            </div>
+            <div className="text-3xl font-bold text-purple-300">{calculateGoalAlignment()}%</div>
+          </div>
+          
+          <div className="bg-black/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-gray-300 text-sm">Energy Level</span>
+              <Zap className="w-5 h-5 text-yellow-400" />
+            </div>
+            <div className="text-2xl font-bold text-purple-300 capitalize">{energyLevel}</div>
+          </div>
+          
+          <div className="bg-black/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-gray-300 text-sm">Daily Progress</span>
+              <Activity className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="text-3xl font-bold text-purple-300">
+              {dailyGoals.filter(g => g.completed).length}/{dailyGoals.length}
+            </div>
+          </div>
+
+          <div className="bg-black/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-gray-300 text-sm">Active Projects</span>
+              <Folder className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div className="text-3xl font-bold text-purple-300">{folders.length}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="backdrop-blur-xl bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 border border-purple-500/30 hover:scale-105 transition-all cursor-pointer" onClick={() => setActiveView('goals')}>
+          <Target className="w-12 h-12 text-purple-400 mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">Daily Goals</h3>
+          <p className="text-purple-200">{dailyGoals.length} goals tracked</p>
+        </div>
+
+        <div className="backdrop-blur-xl bg-gradient-to-br from-blue-900/40 to-cyan-900/40 rounded-2xl p-6 border border-blue-500/30 hover:scale-105 transition-all cursor-pointer" onClick={() => setActiveView('smartboard')}>
+          <Grid className="w-12 h-12 text-blue-400 mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">SmartBoard</h3>
+          <p className="text-blue-200">{smartBoardData.length} items</p>
+        </div>
+
+        <div className="backdrop-blur-xl bg-gradient-to-br from-green-900/40 to-emerald-900/40 rounded-2xl p-6 border border-green-500/30 hover:scale-105 transition-all cursor-pointer" onClick={() => setActiveView('analytics')}>
+          <BarChart3 className="w-12 h-12 text-green-400 mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">Analytics</h3>
+          <p className="text-green-200">View insights</p>
+        </div>
       </div>
     </div>
   );
-  
-  // Daily Goal Modal
-  const DailyGoalModal = () => {
-    const [title, setTitle] = useState('');
-    const [time, setTime] = useState('');
-    const [linkedGoal, setLinkedGoal] = useState('');
-    
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (title.trim()) {
-        addDailyGoal({ title, time, linkedGoalId: linkedGoal || null });
-      }
-    };
-    
-    return (
-      <Modal onClose={() => setShowModal(null)} title="Add Daily Goal">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="What do you want to achieve today?"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            autoFocus
-          />
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-          />
-          <select
-            value={linkedGoal}
-            onChange={(e) => setLinkedGoal(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-          >
-            <option value="">Link to long-term goal (optional)</option>
-            {longTermGoals.map(g => (
-              <option key={g.id} value={g.id}>{g.title}</option>
+
+  const GoalsView = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold text-white">Daily Goals</h2>
+        <button onClick={() => setShowModal('add-goal')} className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 rounded-full text-white font-semibold flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
+          <Plus className="w-5 h-5" /> Add Goal
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {dailyGoals.map(goal => {
+          const linkedGoal = longTermGoals.find(lg => lg.id === goal.linkedGoalId);
+          return (
+            <div key={goal.id} className="backdrop-blur-xl bg-white/10 rounded-2xl p-6 border border-white/20 hover:border-purple-400/50 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 flex-1">
+                  <button 
+                    onClick={() => toggleTaskComplete(goal.id, 'daily')} 
+                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                      goal.completed ? 'bg-green-500 border-green-500' : 'border-purple-400 hover:border-purple-300'
+                    }`}
+                  >
+                    {goal.completed && <Check className="w-6 h-6 text-white" />}
+                  </button>
+                  <div className="flex-1">
+                    <h3 className={`text-xl font-semibold ${goal.completed ? 'line-through text-gray-400' : 'text-white'}`}>
+                      {goal.title}
+                    </h3>
+                    {goal.time && (
+                      <p className="text-purple-300 text-sm flex items-center gap-2 mt-1">
+                        <Clock className="w-4 h-4" /> {goal.time}
+                      </p>
+                    )}
+                    {linkedGoal && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <Star className="w-4 h-4 text-yellow-400" />
+                        <span className="text-yellow-300 text-sm">Linked to: {linkedGoal.title}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {!goal.linkedGoalId && longTermGoals.length > 0 && (
+                    <select 
+                      onChange={(e) => linkTaskToGoal(goal.id, parseInt(e.target.value))}
+                      className="bg-black/30 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="">Link to goal...</option>
+                      {longTermGoals.map(lg => (
+                        <option key={lg.id} value={lg.id}>{lg.title}</option>
+                      ))}
+                    </select>
+                  )}
+                  <button 
+                    onClick={() => setDailyGoals(dailyGoals.filter(g => g.id !== goal.id))}
+                    className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-all"
+                  >
+                    <Trash2 className="w-5 h-5 text-red-400" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const SmartBoardView = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold text-white">SmartBoard - Excel-like Grid</h2>
+        <div className="flex gap-3">
+          <button onClick={addSmartBoardRow} className="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 rounded-full text-white font-semibold flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
+            <Plus className="w-5 h-5" /> Add Row
+          </button>
+        </div>
+      </div>
+
+      <div className="backdrop-blur-xl bg-white/10 rounded-2xl border border-white/20 overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-white/20">
+              <th className="text-left p-4 text-white font-semibold">Status</th>
+              <th className="text-left p-4 text-white font-semibold">Title</th>
+              <th className="text-left p-4 text-white font-semibold">Deadline</th>
+              <th className="text-left p-4 text-white font-semibold">Priority</th>
+              <th className="text-left p-4 text-white font-semibold">Progress</th>
+              <th className="text-left p-4 text-white font-semibold">Notes</th>
+              <th className="text-left p-4 text-white font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {smartBoardData.map(row => (
+              <tr key={row.id} className="border-b border-white/10 hover:bg-white/5">
+                <td className="p-4">
+                  <select
+                    value={row.status}
+                    onChange={(e) => updateSmartBoardCell(row.id, 'status', e.target.value)}
+                    className="bg-black/30 border border-white/20 rounded px-3 py-2 text-white text-sm"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="blocked">Blocked</option>
+                  </select>
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={row.title}
+                    onChange={(e) => updateSmartBoardCell(row.id, 'title', e.target.value)}
+                    className="bg-transparent border-b border-white/20 focus:border-purple-400 outline-none text-white w-full"
+                    placeholder="Enter title..."
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="date"
+                    value={row.deadline}
+                    onChange={(e) => updateSmartBoardCell(row.id, 'deadline', e.target.value)}
+                    className="bg-black/30 border border-white/20 rounded px-3 py-2 text-white text-sm"
+                  />
+                </td>
+                <td className="p-4">
+                  <select
+                    value={row.priority}
+                    onChange={(e) => updateSmartBoardCell(row.id, 'priority', e.target.value)}
+                    className={`border rounded px-3 py-2 text-white text-sm ${
+                      row.priority === 'high' ? 'bg-red-600/30 border-red-500/50' :
+                      row.priority === 'medium' ? 'bg-yellow-600/30 border-yellow-500/50' :
+                      'bg-green-600/30 border-green-500/50'
+                    }`}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={row.progress}
+                      onChange={(e) => updateSmartBoardCell(row.id, 'progress', parseInt(e.target.value))}
+                      className="w-24"
+                    />
+                    <span className="text-white text-sm font-semibold">{row.progress}%</span>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={row.notes}
+                    onChange={(e) => updateSmartBoardCell(row.id, 'notes', e.target.value)}
+                    className="bg-transparent border-b border-white/20 focus:border-purple-400 outline-none text-white w-full"
+                    placeholder="Notes..."
+                  />
+                </td>
+                <td className="p-4">
+                  <button
+                    onClick={() => deleteSmartBoardRow(row.id)}
+                    className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded transition-all"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                  </button>
+                </td>
+              </tr>
             ))}
-          </select>
-          <button
-            type="submit"
-            className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg transition-all"
-          >
-            Add Goal
+          </tbody>
+        </table>
+        {smartBoardData.length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            <Grid className="w-16 h-16 mx-auto mb-4 opacity-30" />
+            <p>No items yet. Click "Add Row" to start.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const SecretVaultView = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+          <Lock className="w-8 h-8" /> Secret Vault
+        </h2>
+        <div className="flex gap-3">
+          <button onClick={() => fileInputRef.current?.click()} className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 rounded-full text-white font-semibold flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
+            <Upload className="w-5 h-5" /> Upload File
           </button>
-        </form>
-      </Modal>
-    );
-  };
-  
-  // Long-term Goal Modal
-  const LongTermGoalModal = () => {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [targetDate, setTargetDate] = useState('');
+          <button onClick={() => setShowModal('add-secret')} className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 rounded-full text-white font-semibold flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
+            <Plus className="w-5 h-5" /> Add Note
+          </button>
+        </div>
+      </div>
+
+      <input 
+        ref={fileInputRef}
+        type="file" 
+        onChange={handleFileUpload}
+        className="hidden"
+        accept="*"
+      />
+
+      <div className="backdrop-blur-xl bg-indigo-500/20 rounded-xl p-6 border border-indigo-500/30">
+        <div className="flex items-start gap-3">
+          <Lock className="w-6 h-6 text-indigo-300 mt-1" />
+          <div>
+            <p className="text-indigo-200 font-semibold mb-1">🔐 End-to-End Encrypted</p>
+            <p className="text-indigo-300 text-sm">All notes and files are encrypted locally. Your data is completely private.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4">
+        {secretNotes.map(note => (
+          <div key={note.id} className="backdrop-blur-xl bg-gradient-to-r from-indigo-900/40 to-purple-900/40 rounded-xl p-6 border border-indigo-500/30 hover:border-indigo-400/50 transition-all">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <p className="text-white whitespace-pre-wrap mb-3">{note.content}</p>
+                <p className="text-indigo-300 text-xs">{new Date(note.createdAt).toLocaleString()}</p>
+              </div>
+              <button
+                onClick={() => deleteSecretNote(note.id)}
+                className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded transition-all"
+              >
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </button>
+            </div>
+          </div>
+        ))}
+        {secretNotes.length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            <Lock className="w-16 h-16 mx-auto mb-4 opacity-30" />
+            <p>Your secret vault is empty</p>
+            <p className="text-sm mt-2">Add notes or upload files to get started</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const FoldersView = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold text-white">Folders & Projects</h2>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            className="bg-white/10 hover:bg-white/20 px-4 py-3 rounded-full text-white transition-all"
+          >
+            {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
+          </button>
+          <button onClick={() => setShowModal('add-folder')} className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 rounded-full text-white font-semibold flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
+            <Plus className="w-5 h-5" /> New Folder
+          </button>
+        </div>
+      </div>
+
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-3 gap-6' : 'space-y-4'}>
+        {folders.map(folder => (
+          <div
+            key={folder.id}
+            onClick={() => setSelectedFolder(folder)}
+            className="backdrop-blur-xl bg-gradient-to-br from-cyan-900/40 to-blue-900/40 rounded-2xl p-6 border border-cyan-500/30 hover:border-cyan-400/50 transition-all cursor-pointer hover:scale-105"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <Folder className="w-12 h-12 text-cyan-400" />
+              <span className="bg-cyan-500/30 px-3 py-1 rounded-full text-cyan-200 text-sm">
+                {folder.items.length} items
+              </span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">{folder.name}</h3>
+            <p className="text-cyan-200 text-sm">{folder.description}</p>
+          </div>
+        ))}
+      </div>
+
+      {folders.length === 0 && (
+        <div className="text-center py-12 text-gray-400">
+          <Folder className="w-16 h-16 mx-auto mb-4 opacity-30" />
+          <p>No folders yet. Create your first project folder.</p>
+        </div>
+      )}
+    </div>
+  );
+
+  const AnalyticsView = () => {
+    const totalGoals = dailyGoals.length;
+    const completedGoals = dailyGoals.filter(g => g.completed).length;
+    const completionRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+    const alignment = calculateGoalAlignment();
     
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (title.trim()) {
-        addLongTermGoal({ title, description, targetDate });
-      }
-    };
+    const weeklyData = [
+      { day: 'Mon', completed: 5, total: 7 },
+      { day: 'Tue', completed: 6, total: 8 },
+      { day: 'Wed', completed: 4, total: 6 },
+      { day: 'Thu', completed: 7, total: 9 },
+      { day: 'Fri', completed: 5, total: 7 },
+      { day: 'Sat', completed: 3, total: 4 },
+      { day: 'Sun', completed: completedGoals, total: totalGoals }
+    ];
     
     return (
-      <Modal onClose={() => setShowModal(null)} title="Create Long-term Goal">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="What's your long-term goal?"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            autoFocus
-          />
-          <textarea
-            placeholder="Describe your goal..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows="3"
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none`}
-          />
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-          />
-          <button
-            type="submit"
-            className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg transition-all"
-          >
-            Create Goal
-          </button>
-        </form>
-      </Modal>
+      <div className="space-y-6">
+        <h2 className="text-3xl font-bold text-white">Analytics Dashboard</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="backdrop-blur-xl bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-xl p-6 border border-purple-500/30">
+            <BarChart3 className="w-8 h-8 text-purple-400 mb-2" />
+            <p className="text-purple-200 text-sm">Completion Rate</p>
+            <p className="text-3xl font-bold text-white">{completionRate}%</p>
+          </div>
+          
+          <div className="backdrop-blur-xl bg-gradient-to-br from-blue-900/40 to-cyan-900/40 rounded-xl p-6 border border-blue-500/30">
+            <Target className="w-8 h-8 text-blue-400 mb-2" />
+            <p className="text-blue-200 text-sm">Goal Alignment</p>
+            <p className="text-3xl font-bold text-white">{alignment}%</p>
+          </div>
+          
+          <div className="backdrop-blur-xl bg-gradient-to-br from-green-900/40 to-emerald-900/40 rounded-xl p-6 border border-green-500/30">
+            <Zap className="w-8 h-8 text-green-400 mb-2" />
+            <p className="text-green-200 text-sm">Energy Level</p>
+            <p className="text-3xl font-bold text-white capitalize">{energyLevel}</p>
+          </div>
+          
+          <div className="backdrop-blur-xl bg-gradient-to-br from-pink-900/40 to-purple-900/40 rounded-xl p-6 border border-pink-500/30">
+            <Star className="w-8 h-8 text-pink-400 mb-2" />
+            <p className="text-pink-200 text-sm">Active Goals</p>
+            <p className="text-3xl font-bold text-white">{longTermGoals.length}</p>
+          </div>
+        </div>
+
+        <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-8 border border-white/20">
+          <h3 className="text-2xl font-bold text-white mb-6">Weekly Progress</h3>
+          <div className="flex items-end justify-between h-48 gap-2">
+            {weeklyData.map((day, i) => {
+              const percentage = day.total > 0 ? (day.completed / day.total) * 100 : 0;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                  <div className="w-full flex flex-col justify-end h-full">
+                    <div 
+                      className="w-full bg-gradient-to-t from-purple-500 to-pink-500 rounded-t-lg transition-all duration-500 hover:scale-105"
+                      style={{ height: `${percentage}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-300">{day.day}</span>
+                  <span className="text-xs font-semibold text-purple-300">{day.completed}/{day.total}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-8 border border-white/20">
+          <h3 className="text-2xl font-bold text-white mb-6">Productivity Heatmap (24 Hours)</h3>
+          <div className="grid grid-cols-12 gap-2">
+            {[...Array(24)].map((_, hour) => {
+              const intensity = hour >= 9 && hour < 12 ? 100 : hour >= 14 && hour < 17 ? 70 : hour >= 6 && hour < 9 ? 50 : 20;
+              return (
+                <div key={hour} className="flex flex-col items-center gap-1">
+                  <div 
+                    className="w-full h-16 rounded bg-blue-500 transition-all hover:scale-110"
+                    style={{ opacity: intensity / 100 }}
+                    title={`${hour}:00 - ${intensity}% productive`}
+                  ></div>
+                  <span className="text-xs text-gray-400">{hour}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-8 border border-white/20">
+          <h3 className="text-2xl font-bold text-white mb-6">Long-term Progress</h3>
+          <div className="space-y-4">
+            {longTermGoals.map(goal => (
+              <div key={goal.id} className="bg-black/20 rounded-lg p-4">
+                <div className="flex justify-between mb-2">
+                  <span className="text-white font-semibold">{goal.title}</span>
+                  <span className="text-pink-300 font-bold">{goal.progress}%</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-3">
+                  <div className="bg-gradient-to-r from-pink-500 to-purple-500 h-full rounded-full transition-all" style={{ width: `${goal.progress}%` }}></div>
+                </div>
+              </div>
+            ))}
+            {longTermGoals.length === 0 && (
+              <p className="text-gray-400 text-center py-4">No long-term goals set yet</p>
+            )}
+          </div>
+        </div>
+      </div>
     );
   };
+
+  // ==================== MODALS ====================
   
-  // Task Modal
-  const TaskModal = () => {
-    const [title, setTitle] = useState('');
-    const [time, setTime] = useState('');
-    const [priority, setPriority] = useState('medium');
-    const [duration, setDuration] = useState(30);
-    
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (title.trim()) {
-        addTask({ title, time, priority, estimatedDuration: duration });
-      }
-    };
-    
-    return (
-      <Modal onClose={() => setShowModal(null)} title="Add Task">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="What needs to be done?"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            autoFocus
+  const AddGoalModal = () => (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="backdrop-blur-xl bg-gradient-to-br from-purple-900/90 to-pink-900/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-purple-500/50 shadow-2xl">
+        <h3 className="text-3xl font-bold mb-6 text-white">New Daily Goal</h3>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          addDailyGoal({ 
+            title: formData.get('title'), 
+            time: formData.get('time'),
+            priority: formData.get('priority')
+          });
+          setShowModal(null);
+          e.target.reset();
+        }}>
+          <input 
+            type="text" 
+            name="title" 
+            placeholder="Goal title..." 
+            className="w-full bg-black/30 border border-purple-500/30 rounded-xl px-4 py-3 mb-4 text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+            required 
           />
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+          <input 
+            type="time" 
+            name="time" 
+            className="w-full bg-black/30 border border-purple-500/30 rounded-xl px-4 py-3 mb-4 text-white focus:border-purple-400 focus:outline-none"
           />
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+          <select 
+            name="priority" 
+            className="w-full bg-black/30 border border-purple-500/30 rounded-xl px-4 py-3 mb-6 text-white focus:border-purple-400 focus:outline-none"
           >
             <option value="low">Low Priority</option>
             <option value="medium">Medium Priority</option>
             <option value="high">High Priority</option>
           </select>
-          <input
-            type="number"
-            placeholder="Duration (minutes)"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            min="5"
-            step="5"
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500`}
-          />
-          <button
-            type="submit"
-            className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg transition-all"
-          >
-            Add Task
-          </button>
+          <div className="flex gap-3">
+            <button 
+              type="submit" 
+              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all text-white"
+            >
+              Create Goal
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setShowModal(null)} 
+              className="px-6 bg-white/10 hover:bg-white/20 py-3 rounded-xl transition-all text-white"
+            >
+              Cancel
+            </button>
+          </div>
         </form>
-      </Modal>
-    );
-  };
-  
-  // Folder Modal
-  const FolderModal = () => {
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [color, setColor] = useState('purple');
-    
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (name.trim()) {
-        addFolder({ name, description, color });
-      }
-    };
-    
-    return (
-      <Modal onClose={() => setShowModal(null)} title="Create Folder">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Folder name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            autoFocus
-          />
-          <textarea
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows="2"
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none`}
-          />
-          <select
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-          >
-            <option value="purple">Purple</option>
-            <option value="pink">Pink</option>
-            <option value="blue">Blue</option>
-            <option value="green">Green</option>
-          </select>
-          <button
-            type="submit"
-            className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg transition-all"
-          >
-            Create Folder
-          </button>
-        </form>
-      </Modal>
-    );
-  };
-  
-  // Secret Note Modal
-  const SecretNoteModal = () => {
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
-    
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (title.trim() && content.trim()) {
-        addSecretNote({ title, content });
-      }
-    };
-    
-    return (
-      <Modal onClose={() => setShowModal(null)} title="Add Secret Note">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Note title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            autoFocus
-          />
-          <textarea
-            placeholder="Your secret note..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows="6"
-            className={`w-full px-4 py-3 rounded-xl ${themeColors.inputBg} border ${themeColors.border} ${themeColors.text} placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none`}
-          />
-          <button
-            type="submit"
-            className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg transition-all"
-          >
-            Save Note
-          </button>
-        </form>
-      </Modal>
-    );
-  };
-  
-  // Dashboard View
-  const DashboardView = () => {
-    const alignment = calculateGoalAlignment();
-    const completedToday = dailyGoals.filter(g => g.completed).length;
-    const totalToday = dailyGoals.length;
-    
-    return (
-      <div className="space-y-6 animate-fade-in">
-        {/* Welcome Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-              Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 18 ? 'Afternoon' : 'Evening'}
-            </h1>
-          </div>
-          <p className={`${themeColors.textSecondary} text-lg`}>
-            {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
-          <p className={`${theme === 'dark' ? 'text-purple-300' : 'text-purple-700'} text-2xl font-semibold mt-2`}>
-            {currentTime.toLocaleTimeString()}
-          </p>
-        </div>
-
-        {/* AI Insights Panel */}
-        <div className={`${theme === 'dark' ? 'bg-gradient-to-br from-purple-900/40 to-pink-900/40' : 'bg-gradient-to-br from-purple-200/60 to-pink-200/60'} rounded-2xl p-6 border ${themeColors.border} backdrop-blur-xl shadow-2xl`}>
-          <div className="flex items-center gap-3 mb-4">
-            <Brain className={`w-8 h-8 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-700'}`} />
-            <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-purple-200' : 'text-purple-900'}`}>AI Insights</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className={`${themeColors.cardBg} rounded-xl p-4 backdrop-blur-sm`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className={`${themeColors.textSecondary} text-sm`}>Goal Alignment</span>
-                <TrendingUp className="w-5 h-5 text-green-400" />
-              </div>
-              <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-300' : 'text-purple-700'}`}>{alignment}%</div>
-              <div className={`w-full ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'} rounded-full h-2 mt-2`}>
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all" style={{ width: `${alignment}%` }}></div>
-              </div>
-            </div>
-            
-            <div className={`${themeColors.cardBg} rounded-xl p-4 backdrop-blur-sm`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className={`${themeColors.textSecondary} text-sm`}>Energy Level</span>
-                <Zap className={`w-5 h-5 ${energyLevel === 'peak' ? 'text-yellow-400' : 'text-green-400'}`} />
-              </div>
-              <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-purple-300' : 'text-purple-700'} capitalize`}>{energyLevel}</div>
-              <div className={`text-xs ${themeColors.textSecondary} mt-1`}>
-                {energyLevel === 'peak' ? 'Best time for complex tasks' : 'Good for moderate work'}
-              </div>
-            </div>
-            
-            <div className={`${themeColors.cardBg} rounded-xl p-4 backdrop-blur-sm`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className={`${themeColors.textSecondary} text-sm`}>Today's Progress</span>
-                <Activity className="w-5 h-5 text-blue-400" />
-              </div>
-              <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-300' : 'text-purple-700'}`}>
-                {completedToday}/{totalToday}
-              </div>
-              <div className={`text-xs ${themeColors.textSecondary} mt-1`}>
-                {totalToday > 0 ? `${Math.round((completedToday/totalToday)*100)}% completed` : 'No goals set'}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Capture */}
-        <div className={`${themeColors.cardBg} backdrop-blur-xl rounded-2xl p-4 border ${themeColors.border} shadow-lg`}>
-          <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-cyan-200' : 'text-cyan-900'} mb-3 flex items-center gap-2`}>
-            <Sparkles className="w-5 h-5" /> Quick Capture
-          </h3>
-          <div className="flex flex-wrap gap-3">
-            <button 
-              onClick={startVoiceCapture}
-              disabled={isRecording}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                isRecording 
-                  ? 'bg-red-600 animate-pulse text-white' 
-                  : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:shadow-lg text-white'
-              }`}
-            >
-              <Mic className="w-5 h-5" />
-              {isRecording ? 'Recording...' : 'Voice Note'}
-            </button>
-            
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:shadow-lg transition-all text-white"
-            >
-              <Upload className="w-5 h-5" />
-              Upload File
-            </button>
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              onChange={handleFileUpload}
-              className="hidden"
-              accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
-            />
-            
-            <button 
-              onClick={() => setShowModal('task')}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-lg transition-all text-white"
-            >
-              <Edit2 className="w-5 h-5" />
-              Quick Task
-            </button>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className={`${theme === 'dark' ? 'bg-gradient-to-br from-purple-900/40 to-pink-900/40' : 'bg-gradient-to-br from-purple-200/60 to-pink-200/60'} rounded-2xl p-6 border ${themeColors.border} backdrop-blur-xl shadow-2xl hover:scale-105 transition-all`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-xl font-semibold ${theme === 'dark' ? 'text-purple-200' : 'text-purple-900'} flex items-center gap-2`}>
-                <Target className="w-6 h-6" /> Daily Goals
-              </h3>
-              <span className={`${theme === 'dark' ? 'bg-purple-500/30' : 'bg-purple-300/50'} px-3 py-1 rounded-full text-sm`}>
-                {completedToday}/{totalToday}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {dailyGoals.slice(0, 3).map(goal => (
-                <div key={goal.id} className={`flex items-center gap-2 ${themeColors.text}`}>
-                  <Check className={`w-4 h-4 ${goal.completed ? 'text-green-400' : 'text-gray-600'}`} />
-                  <span className={goal.completed ? 'line-through text-gray-500' : ''}>{goal.title}</span>
-                </div>
-              ))}
-              {dailyGoals.length === 0 && (
-                <p className={`${themeColors.textSecondary} text-sm`}>No goals set for today</p>
-              )}
-            </div>
-            <button 
-              onClick={() => setActiveView('goals')} 
-              className={`mt-4 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-700'} text-sm hover:underline`}
-            >
-              View all →
-            </button>
-          </div>
-
-          <div className={`${theme === 'dark' ? 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40' : 'bg-gradient-to-br from-blue-200/60 to-cyan-200/60'} rounded-2xl p-6 border ${themeColors.border} backdrop-blur-xl shadow-2xl hover:scale-105 transition-all`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-xl font-semibold ${theme === 'dark' ? 'text-blue-200' : 'text-blue-900'} flex items-center gap-2`}>
-                <Clock className="w-6 h-6" /> Tasks
-              </h3>
-              <span className={`${theme === 'dark' ? 'bg-blue-500/30' : 'bg-blue-300/50'} px-3 py-1 rounded-full text-sm`}>
-                {tasks.length}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {tasks.slice(0, 3).map(task => (
-                <div key={task.id} className={`flex items-center justify-between ${themeColors.text}`}>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'}`}>{task.time}</span>
-                    <span className="text-sm">{task.title}</span>
-                  </div>
-                </div>
-              ))}
-              {tasks.length === 0 && (
-                <p className={`${themeColors.textSecondary} text-sm`}>No tasks scheduled</p>
-              )}
-            </div>
-            <button 
-              onClick={() => setActiveView('tasks')} 
-              className={`mt-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'} text-sm hover:underline`}
-            >
-              Manage tasks →
-            </button>
-          </div>
-
-          <div className={`${theme === 'dark' ? 'bg-gradient-to-br from-pink-900/40 to-purple-900/40' : 'bg-gradient-to-br from-pink-200/60 to-purple-200/60'} rounded-2xl p-6 border ${themeColors.border} backdrop-blur-xl shadow-2xl hover:scale-105 transition-all`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-xl font-semibold ${theme === 'dark' ? 'text-pink-200' : 'text-pink-900'} flex items-center gap-2`}>
-                <Star className="w-6 h-6" /> Long-term Goals
-              </h3>
-              <span className={`${theme === 'dark' ? 'bg-pink-500/30' : 'bg-pink-300/50'} px-3 py-1 rounded-full text-sm`}>
-                {longTermGoals.length}
-              </span>
-            </div>
-            <div className="space-y-3">
-              {longTermGoals.slice(0, 2).map(goal => (
-                <div key={goal.id}>
-                  <p className={`${themeColors.text} text-sm mb-1`}>{goal.title}</p>
-                  <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-300/50'} rounded-full h-2`}>
-                    <div className="bg-gradient-to-r from-pink-500 to-purple-500 h-full rounded-full transition-all" style={{ width: `${goal.progress}%` }}></div>
-                  </div>
-                </div>
-              ))}
-              {longTermGoals.length === 0 && (
-                <p className={`${themeColors.textSecondary} text-sm`}>No long-term goals set</p>
-              )}
-            </div>
-            <button 
-              onClick={() => setActiveView('longterm')} 
-              className={`mt-4 ${theme === 'dark' ? 'text-pink-400' : 'text-pink-700'} text-sm hover:underline`}
-            >
-              Track progress →
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Daily Goals View
-  const DailyGoalsView = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className={`text-3xl font-bold ${themeColors.text}`}>Daily Goals</h2>
-        <button
-          onClick={() => setShowModal('daily-goal')}
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg transition-all flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Add Goal
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        {dailyGoals.map(goal => (
-          <div key={goal.id} className={`${themeColors.cardBg} backdrop-blur-xl rounded-xl p-4 border ${themeColors.border} hover:shadow-lg transition-all`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 flex-1">
-                <button
-                  onClick={() => toggleTaskComplete(goal.id, 'daily')}
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                    goal.completed 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-500' 
-                      : `border-purple-500 ${themeColors.hoverBg}`
-                  }`}
-                >
-                  {goal.completed && <Check className="w-4 h-4 text-white" />}
-                </button>
-                <div className="flex-1">
-                  <h3 className={`font-semibold ${goal.completed ? 'line-through text-gray-500' : themeColors.text}`}>
-                    {goal.title}
-                  </h3>
-                  <div className="flex items-center gap-3 mt-1">
-                    {goal.time && (
-                      <span className={`text-xs ${themeColors.textSecondary} flex items-center gap-1`}>
-                        <Clock className="w-3 h-3" />
-                        {goal.time}
-                      </span>
-                    )}
-                    {goal.linkedGoalId && (
-                      <span className={`text-xs ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'} flex items-center gap-1`}>
-                        <Link2 className="w-3 h-3" />
-                        Linked
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => deleteItem(goal.id, 'daily')}
-                className={`${themeColors.textSecondary} hover:text-red-500 transition-colors`}
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        ))}
-        {dailyGoals.length === 0 && (
-          <div className={`${themeColors.cardBg} backdrop-blur-xl rounded-xl p-12 border ${themeColors.border} text-center`}>
-            <Target className={`w-16 h-16 ${themeColors.textSecondary} mx-auto mb-4`} />
-            <p className={`${themeColors.text} text-lg mb-2`}>No daily goals yet</p>
-            <p className={`${themeColors.textSecondary}`}>Start by adding your first goal for today!</p>
-          </div>
-        )}
       </div>
     </div>
   );
 
-  // Long-term Goals View
-  const LongTermGoalsView = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className={`text-3xl font-bold ${themeColors.text}`}>Long-term Goals</h2>
-        <button
-          onClick={() => setShowModal('longterm-goal')}
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg transition-all flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Add Goal
-        </button>
+  const AddLongTermGoalModal = () => (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="backdrop-blur-xl bg-gradient-to-br from-pink-900/90 to-purple-900/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-pink-500/50 shadow-2xl">
+        <h3 className="text-3xl font-bold mb-6 text-white">New Long-term Goal</h3>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          addLongTermGoal({ 
+            title: formData.get('title'), 
+            description: formData.get('description'),
+            targetDate: formData.get('targetDate')
+          });
+          setShowModal(null);
+          e.target.reset();
+        }}>
+          <input 
+            type="text" 
+            name="title" 
+            placeholder="Goal title..." 
+            className="w-full bg-black/30 border border-pink-500/30 rounded-xl px-4 py-3 mb-4 text-white placeholder-gray-400 focus:border-pink-400 focus:outline-none"
+            required 
+          />
+          <textarea 
+            name="description" 
+            placeholder="Description..." 
+            className="w-full bg-black/30 border border-pink-500/30 rounded-xl px-4 py-3 mb-4 text-white placeholder-gray-400 focus:border-pink-400 focus:outline-none resize-none"
+            rows="3"
+          ></textarea>
+          <input 
+            type="date" 
+            name="targetDate" 
+            className="w-full bg-black/30 border border-pink-500/30 rounded-xl px-4 py-3 mb-6 text-white focus:border-pink-400 focus:outline-none"
+          />
+          <div className="flex gap-3">
+            <button 
+              type="submit" 
+              className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/50 transition-all text-white"
+            >
+              Create Goal
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setShowModal(null)} 
+              className="px-6 bg-white/10 hover:bg-white/20 py-3 rounded-xl transition-all text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
+    </div>
+  );
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {longTermGoals.map(goal => (
-          <div key={goal.id} className={`${theme === 'dark' ? 'bg-gradient-to-br from-purple-900/40 to-pink-900/40' : 'bg-gradient-to-br from-purple-200/60 to-pink-200/60'} backdrop-blur-xl rounded-2xl p-6 border ${themeColors.border} shadow-xl hover:scale-105 transition-all`}>
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h3 className={`text-xl font-bold ${themeColors.text} mb-2`}>{goal.title}</h3>
-                {goal.description && (
-                  <p className={`${themeColors.textSecondary} text-sm mb-3`}>{goal.description}</p>
-                )}
-                {goal.targetDate && (
-                  <span className={`text-xs ${theme === 'dark' ? 'text-purple-400' : 'text-purple-700'} flex items-center gap-1`}>
-                    <Calendar className="w-3 h-3" />
-                    Target: {new Date(goal.targetDate).toLocaleDateString()}
+  const AddSecretNoteModal = () => (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="backdrop-blur-xl bg-gradient-to-br from-indigo-900/90 to-purple-900/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-indigo-500/50 shadow-2xl">
+        <h3 className="text-3xl font-bold mb-6 text-white">New Secret Note</h3>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          addSecretNote(formData.get('content'));
+          setShowModal(null);
+          e.target.reset();
+        }}>
+          <textarea 
+            name="content" 
+            placeholder="Your private thoughts..." 
+            className="w-full bg-black/30 border border-indigo-500/30 rounded-xl px-4 py-3 mb-6 text-white placeholder-gray-400 focus:border-indigo-400 focus:outline-none resize-none"
+            rows="6"
+            required
+          ></textarea>
+          <div className="flex gap-3">
+            <button 
+              type="submit" 
+              className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-indigo-500/50 transition-all text-white"
+            >
+              Save Securely
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setShowModal(null)} 
+              className="px-6 bg-white/10 hover:bg-white/20 py-3 rounded-xl transition-all text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const AddFolderModal = () => (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="backdrop-blur-xl bg-gradient-to-br from-cyan-900/90 to-blue-900/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-cyan-500/50 shadow-2xl">
+        <h3 className="text-3xl font-bold mb-6 text-white">Create Folder</h3>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          addFolder({ 
+            name: formData.get('name'), 
+            description: formData.get('description')
+          });
+          setShowModal(null);
+          e.target.reset();
+        }}>
+          <input 
+            type="text" 
+            name="name" 
+            placeholder="Folder name..." 
+            className="w-full bg-black/30 border border-cyan-500/30 rounded-xl px-4 py-3 mb-4 text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
+            required 
+          />
+          <textarea 
+            name="description" 
+            placeholder="Description..." 
+            className="w-full bg-black/30 border border-cyan-500/30 rounded-xl px-4 py-3 mb-6 text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none resize-none"
+            rows="2"
+          ></textarea>
+          <div className="flex gap-3">
+            <button 
+              type="submit" 
+              className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-cyan-500/50 transition-all text-white"
+            >
+              Create Folder
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setShowModal(null)} 
+              className="px-6 bg-white/10 hover:bg-white/20 py-3 rounded-xl transition-all text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );const ChatAssistant = ({
+  showChat,
+  setShowChat,
+  chatMessages,
+  chatInput,
+  setChatInput,
+  handleChatSubmit,
+}) => (
+  <div
+    className={`fixed bottom-6 right-6 ${
+      showChat ? "w-96 h-[36rem]" : "w-16 h-16"
+    } transition-all duration-300 z-50`}
+  >
+    {!showChat ? (
+      <button
+        onClick={() => setShowChat(true)}
+        className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center shadow-2xl hover:scale-110 transition-all animate-pulse"
+      >
+        <MessageSquare className="w-8 h-8 text-white" />
+      </button>
+    ) : (
+      <div className="backdrop-blur-xl bg-gray-900/90 rounded-3xl shadow-2xl border border-white/20 flex flex-col h-full">
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-t-3xl flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="w-6 h-6 text-white" />
+            <h3 className="font-semibold text-white">AI Assistant</h3>
+          </div>
+          <button
+            onClick={() => setShowChat(false)}
+            className="text-white hover:bg-white/20 rounded p-1"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {chatMessages.length === 0 && (
+            <div className="text-center text-gray-400 py-8">
+              <Brain className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="mb-2">How can I help you today?</p>
+              <p className="text-xs">Try: "Add goal workout" or "Show stats"</p>
+            </div>
+          )}
+          {chatMessages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${
+                msg.sender === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  msg.sender === "user"
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                    : "bg-gray-800 text-gray-200"
+                }`}
+              >
+                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleChatSubmit} className="p-4 border-t border-white/20">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask me anything..."
+              className="flex-1 bg-gray-800 text-white rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+            <button
+              type="submit"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-full p-2 hover:scale-110 transition-all"
+            >
+              <Send className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </form>
+      </div>
+    )}
+  </div>
+);
+
+
+  // ==================== NOTIFICATIONS PANEL ====================
+  
+  const NotificationsPanel = () => (
+    <div className="fixed top-20 right-6 w-80 max-h-96 overflow-y-auto z-40 space-y-2">
+      {notifications.map(notif => (
+        <div key={notif.id} className="backdrop-blur-xl bg-purple-900/90 rounded-xl p-4 border border-purple-500/30 shadow-lg animate-slide-in">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h4 className="font-semibold text-white mb-1">{notif.title}</h4>
+              <p className="text-sm text-purple-200">{notif.body}</p>
+              <p className="text-xs text-purple-300 mt-1">{notif.time.toLocaleTimeString()}</p>
+            </div>
+            <button onClick={() => setNotifications(notifications.filter(n => n.id !== notif.id))} className="text-purple-300 hover:text-white">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // ==================== MAIN RENDER ====================
+  
+  return (
+    <div className="relative min-h-screen overflow-hidden">
+      <MagicalCosmicBackground timeOfDay={theme} />
+      
+      <div className="relative z-10 min-h-screen">
+        {/* Header */}
+        <header className="backdrop-blur-xl bg-black/20 border-b border-white/10 p-6">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">NotionTablet</h1>
+                <p className="text-purple-200 text-sm flex items-center gap-2">
+                  {theme === 'sunrise' && <Sunrise className="w-4 h-4" />}
+                  {theme === 'day' && <Sun className="w-4 h-4" />}
+                  {theme === 'sunset' && <Sunset className="w-4 h-4" />}
+                  {theme === 'night' && <Moon className="w-4 h-4" />}
+                  {theme.charAt(0).toUpperCase() + theme.slice(1)} Mode • {themeMode}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                <p className="text-white text-sm flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  Energy: <span className="font-semibold capitalize">{energyLevel}</span>
+                </p>
+              </div>
+
+              <button
+                onClick={() => setAutoTheme(!autoTheme)}
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-xl transition-all"
+                title={autoTheme ? 'Auto theme enabled' : 'Auto theme disabled'}
+              >
+                {theme === 'night' ? <Moon className="w-5 h-5 text-purple-400" /> : <Sun className="w-5 h-5 text-yellow-400" />}
+              </button>
+              
+              <button
+                onClick={requestNotificationPermission}
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-xl transition-all relative"
+              >
+                <Bell className={`w-5 h-5 ${notificationsEnabled ? 'text-green-400' : 'text-gray-400'}`} />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {notifications.length}
                   </span>
                 )}
-              </div>
-              <button
-                onClick={() => deleteItem(goal.id, 'longterm')}
-                className={`${themeColors.textSecondary} hover:text-red-500 transition-colors`}
-              >
-                <Trash2 className="w-5 h-5" />
               </button>
+
+              <button
+                onClick={exportData}
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-xl transition-all"
+                title="Export data"
+              >
+                <Download className="w-5 h-5 text-cyan-400" />
+              </button>
+
+              <select
+                value={themeMode}
+                onChange={(e) => setThemeMode(e.target.value)}
+                className="bg-white/10 border border-white/20 rounded-full px-4 py-2 text-white text-sm backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="Aurora">Aurora</option>
+                <option value="Nebula">Nebula</option>
+                <option value="Stardust">Stardust</option>
+                <option value="Solar Flare">Solar Flare</option>
+              </select>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className={`text-sm ${themeColors.textSecondary}`}>Progress</span>
-                <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-purple-300' : 'text-purple-700'}`}>
+          </div>
+        </header>
+
+        {/* Navigation */}
+        <nav className="backdrop-blur-xl bg-black/20 border-b border-white/10 p-4">
+          <div className="max-w-7xl mx-auto flex flex-wrap gap-3 justify-center">
+            {[
+              { id: 'dashboard', icon: Sparkles, label: 'Dashboard' },
+              { id: 'goals', icon: Target, label: 'Daily Goals' },
+              { id: 'longterm', icon: Star, label: 'Long-term' },
+              { id: 'smartboard', icon: Grid, label: 'SmartBoard' },
+              { id: 'analytics', icon: BarChart3, label: 'Analytics' },
+              { id: 'folders', icon: Folder, label: 'Folders' },
+              { id: 'vault', icon: Lock, label: 'Secret Vault' }
+            ].map(item => (
+              <button 
+                key={item.id} 
+                onClick={() => setActiveView(item.id)} 
+                className={`px-6 py-3 rounded-full flex items-center gap-2 transition-all ${
+                  activeView === item.id 
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/50 text-white' 
+                    : 'bg-white/5 hover:bg-white/10 text-white'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="hidden sm:inline">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto p-6">
+          {activeView === 'dashboard' && <DashboardView />}
+          {activeView === 'goals' && <GoalsView />}
+          {activeView === 'longterm' && <LongTermGoalsView />}
+          {activeView === 'smartboard' && <SmartBoardView />}
+          {activeView === 'analytics' && <AnalyticsView />}
+          {activeView === 'folders' && <FoldersView />}
+          {activeView === 'vault' && <SecretVaultView />}
+        </main>
+      </div>
+
+      {/* Modals */}
+      {showModal === 'add-goal' && <AddGoalModal />}
+      {showModal === 'add-longterm' && <AddLongTermGoalModal />}
+      {showModal === 'add-secret' && <AddSecretNoteModal />}
+      {showModal === 'add-folder' && <AddFolderModal />}
+
+      {/* Notifications Panel */}
+      {notifications.length > 0 && <NotificationsPanel />}
+
+      {/* AI Chat Assistant */}
+<ChatAssistant
+  showChat={showChat}
+  setShowChat={setShowChat}
+  chatMessages={chatMessages}
+  chatInput={chatInput}
+  setChatInput={setChatInput}
+  handleChatSubmit={handleChatSubmit}
+/>
+
+      {/* Animations */}
+      <style>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+  // ..const NotionTablet = () => {
+  // all your useState and useEffect hooks here...
+// ... DashboardView, GoalsView, SmartBoardView ...
+// ✅ Define it as a separate component that receives props
+const LongTermGoalsView = ({
+  setShowModal,
+  longTermGoals,
+  dailyGoals,
+  setLongTermGoals,
+}) => (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h2 className="text-3xl font-bold text-white">Long-term Goals</h2>
+      <button
+        onClick={() => setShowModal("add-longterm")}
+        className="bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-3 rounded-full text-white font-semibold flex items-center gap-2 hover:scale-105 transition-all shadow-lg"
+      >
+        <Plus className="w-5 h-5" /> Add Goal
+      </button>
+    </div>
+
+    <div className="grid gap-6">
+      {longTermGoals.map((goal) => {
+        const linkedTasks = dailyGoals.filter(
+          (dg) => dg.linkedGoalId === goal.id
+        );
+        const completedLinked = linkedTasks.filter((dg) => dg.completed).length;
+
+        return (
+          <div
+            key={goal.id}
+            className="backdrop-blur-xl bg-gradient-to-br from-pink-900/40 to-purple-900/40 rounded-2xl p-6 border border-pink-500/30 hover:border-pink-400/50 transition-all"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  {goal.title}
+                </h3>
+                <p className="text-purple-200 mb-3">{goal.description}</p>
+                {goal.targetDate && (
+                  <p className="text-purple-300 text-sm flex items-center gap-2">
+                    <Calendar className="w-4 h-4" /> Target:{" "}
+                    {new Date(goal.targetDate).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xl">
                   {goal.progress}%
                 </span>
               </div>
-              <div className={`w-full ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-300/50'} rounded-full h-3`}>
-                <div 
-                  className="bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${goal.progress}%` }}
-                ></div>
-              </div>
             </div>
-          </div>
-        ))}
-        {longTermGoals.length === 0 && (
-          <div className="col-span-2">
-            <div className={`${themeColors.cardBg} backdrop-blur-xl rounded-xl p-12 border ${themeColors.border} text-center`}>
-              <Star className={`w-16 h-16 ${themeColors.textSecondary} mx-auto mb-4`} />
-              <p className={`${themeColors.text} text-lg mb-2`}>No long-term goals yet</p>
-              <p className={`${themeColors.textSecondary}`}>Create your first long-term goal to track your progress!</p>
+
+            <div className="bg-gray-800/50 rounded-full h-4 overflow-hidden mb-4">
+              <div
+                className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 h-full transition-all duration-500"
+                style={{ width: `${goal.progress}%` }}
+              ></div>
             </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 
-  // Tasks View
-  const TasksView = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className={`text-3xl font-bold ${themeColors.text}`}>Smart Tasks</h2>
-        <button
-          onClick={() => setShowModal('task')}
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg transition-all flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Add Task
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        {tasks.map(task => (
-          <div key={task.id} className={`${themeColors.cardBg} backdrop-blur-xl rounded-xl p-4 border ${themeColors.border} hover:shadow-lg transition-all`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 flex-1">
-                <button
-                  onClick={() => toggleTaskComplete(task.id, 'task')}
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                    task.completed 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-500' 
-                      : `border-blue-500 ${themeColors.hoverBg}`
-                  }`}
-                >
-                  {task.completed && <Check className="w-4 h-4 text-white" />}
-                </button>
-                <div className="flex-1">
-                  <h3 className={`font-semibold ${task.completed ? 'line-through text-gray-500' : themeColors.text}`}>
-                    {task.title}
-                  </h3>
-                  <div className="flex items-center gap-3 mt-1">
-                    {task.time && (
-                      <span className={`text-xs ${themeColors.textSecondary} flex items-center gap-1`}>
-                        <Clock className="w-3 h-3" />
-                        {task.time}
-                      </span>
-                    )}
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      task.priority === 'high' ? 'bg-red-500/20 text-red-400' :
-                      task.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-green-500/20 text-green-400'
-                    }`}>
-                      {task.priority}
-                    </span>
-                    {task.estimatedDuration && (
-                      <span className={`text-xs ${themeColors.textSecondary}`}>
-                        {task.estimatedDuration}min
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-purple-200">
+                {linkedTasks.length} linked tasks • {completedLinked} completed
+              </span>
               <button
-                onClick={() => deleteItem(task.id, 'task')}
-                className={`${themeColors.textSecondary} hover:text-red-500 transition-colors`}
+                onClick={() => {
+                  const newProgress = Math.min(goal.progress + 10, 100);
+                  setLongTermGoals(
+                    longTermGoals.map((g) =>
+                      g.id === goal.id
+                        ? { ...g, progress: newProgress }
+                        : g
+                    )
+                  );
+                }}
+                className="bg-green-600/30 hover:bg-green-600/50 px-4 py-2 rounded-lg transition-all text-white"
               >
-                <Trash2 className="w-5 h-5" />
+                +10% Progress
               </button>
             </div>
           </div>
-        ))}
-        {tasks.length === 0 && (
-          <div className={`${themeColors.cardBg} backdrop-blur-xl rounded-xl p-12 border ${themeColors.border} text-center`}>
-            <Clock className={`w-16 h-16 ${themeColors.textSecondary} mx-auto mb-4`} />
-            <p className={`${themeColors.text} text-lg mb-2`}>No tasks scheduled</p>
-            <p className={`${themeColors.textSecondary}`}>Add your first task to get started!</p>
-          </div>
-        )}
-      </div>
+        );
+      })}
     </div>
-  );
-  export default CosmicAssistant;
+  </div>
+);
+
+export default NotionTablet;

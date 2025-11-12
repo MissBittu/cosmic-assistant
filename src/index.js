@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import CosmicAssistant from './cosmic';
+import App from './App'; // ← THIS is the key line
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <CosmicAssistant />
+    <App />
   </React.StrictMode>
 );
 
